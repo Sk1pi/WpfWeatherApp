@@ -1,0 +1,132 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+                    xmlns:v="clr-namespace:System;assembly=mscorlib">
+    <v:String x:Key="lang">ua-UA</v:String>
+
+    <v:String x:Key="MainPageTitle">OffSinoptik</v:String>
+    <v:String x:Key="WeatherPageTitle">Головна</v:String>
+    <v:String x:Key="LocationsPageTitle">Місця</v:String>
+    <v:String x:Key="SettingsPageTitle">Налаштування</v:String>
+    <v:String x:Key="Exit">Вихід</v:String>
+    <v:String x:Key="OnlineTip">онлайн</v:String>
+    <v:String x:Key="OfflineTip">не в мережі</v:String>
+
+    <v:String x:Key="RefreshDataError">Неможливо оновити дані</v:String>
+    <v:String x:Key="DateHeader">Прогноз погоди</v:String>
+    <v:String x:Key="NightTemperature">Вночі</v:String>
+    <v:String x:Key="WindGusts">Пориви до</v:String>
+    <v:String x:Key="HourlyForecast">Погодинний прогноз</v:String>
+    <v:String x:Key="Time">Час</v:String>
+    <v:String x:Key="ApparentTemperature">Відчувається як</v:String>
+    <v:String x:Key="Wind">Вітер</v:String>
+    <v:String x:Key="Hours">год</v:String>
+    <v:String x:Key="Minutes">мт</v:String>
+    <v:String x:Key="DaylightHours">Світовий день</v:String>
+    <v:String x:Key="MoonPhazes">Фаза</v:String>
+    <v:String x:Key="Temp">Температура</v:String>
+    <v:String x:Key="Pressure">Тиск</v:String>
+    <v:String x:Key="Precipitation">Вологість</v:String>
+    <v:String x:Key="Day">День</v:String>
+    <v:String x:Key="Week">Неділя</v:String>
+    <v:String x:Key="CheckConnection">Перевірте з'єднання з інтернетом</v:String>
+
+    <v:String x:Key="SelectLocation">Вибране місце:</v:String>
+    <v:String x:Key="FavouritLocations">Вибрані місця:</v:String>
+    <v:String x:Key="SearchPlaceHolder">Знайти точку</v:String>
+
+    <v:String x:Key="General">Основні</v:String>
+    <v:String x:Key="About">Про додаток</v:String>
+    <v:String x:Key="TempSetting">Одиниці вимірювання температури</v:String>
+    <v:String x:Key="PressureSetting">Одиниці вимірювання тиску</v:String>
+    <v:String x:Key="PrecipitationSetting">Одиниці вимірювання випавших опадів</v:String>
+    <v:String x:Key="WindSetting">Одиниці вимірювання швидкості вітру</v:String>
+    <v:String x:Key="LanguageSetting">Мова інтерфейсу</v:String>
+    <v:String x:Key="Version">Версія 1.0</v:String>
+    <v:String x:Key="SourceCode">OpenSource code-</v:String>
+    <v:String x:Key="Font">Шрифт</v:String>
+
+    <v:String x:Key="NoData">Дані відсутні</v:String>
+
+    <v:String x:Key="ClearSky">Ясно</v:String>
+    <v:String x:Key="MainlyClear">Переважно ясно</v:String>
+    <v:String x:Key="PartlyCloudly">Мінлива хмарність</v:String>
+    <v:String x:Key="Overcast">Пасмурно</v:String>
+
+    <v:String x:Key="Fog">Туман</v:String>
+    <v:String x:Key="DepositingRimeFog">Зморось</v:String>
+
+    <v:String x:Key="LightDrizzle">Дрібна мряка</v:String>
+    <v:String x:Key="ModerateDrizzle">Мряка</v:String>
+    <v:String x:Key="DenseDrizzle">Сильна мряка</v:String>
+
+    <v:String x:Key="LightFreezingDrizzle">Крижана мряка</v:String>
+    <v:String x:Key="DenseFreezingDrizzle">Сильна крижана мряка</v:String>
+
+    <v:String x:Key="LightFreezingRain">Крижаний дощ</v:String>
+    <v:String x:Key="HeavyFreezingRain">Сильний крижаний дощ</v:String>
+
+    <v:String x:Key="SlightRain">Невеликий дощ</v:String>
+    <v:String x:Key="ModerateRain">Дощ</v:String>
+    <v:String x:Key="HeavyRain">Сильний дощ</v:String>
+
+    <v:String x:Key="SlightSnowfall">Невеликий сніг</v:String>
+    <v:String x:Key="ModerateSnowfall">Сніг</v:String>
+    <v:String x:Key="HeavySnowfall">Сильний снігопад</v:String>
+    <v:String x:Key="SnowGrains">Крижана крупа</v:String>
+
+    <v:String x:Key="SlightRainShowers">Невелика злива</v:String>
+    <v:String x:Key="ModerateRainShowers">Злива</v:String>
+    <v:String x:Key="ViolentRainShowers">Сильна злива</v:String>
+
+    <v:String x:Key="SlightSnowShowers">Сніг з дощем</v:String>
+    <v:String x:Key="HeavySnowShowers">Сильний сніг з дощем</v:String>
+
+    <v:String x:Key="Thunderstorm">Гроза</v:String>
+    <v:String x:Key="ThunderstormWithSlightHail">Гроза з крупою</v:String>
+    <v:String x:Key="ThunderstormWithHeavyHail">Гроза, град</v:String>
+
+    <v:String x:Key="Monday">Понеділок</v:String>
+    <v:String x:Key="Tuesday">Вівторок</v:String>
+    <v:String x:Key="Wednesday">Середа</v:String>
+    <v:String x:Key="Thursday">Четвер</v:String>
+    <v:String x:Key="Friday">П'ятниця</v:String>
+    <v:String x:Key="Saturday">Субота</v:String>
+    <v:String x:Key="Sunday">Неділя</v:String>
+
+    <v:String x:Key="MondayShort">Пн</v:String>
+    <v:String x:Key="TuesdayShort">Вт</v:String>
+    <v:String x:Key="WednesdayShort">Ср</v:String>
+    <v:String x:Key="ThursdayShort">Чт</v:String>
+    <v:String x:Key="FridayShort">Пт</v:String>
+    <v:String x:Key="SaturdayShort">Сб</v:String>
+    <v:String x:Key="SundayShort">Нд</v:String>
+
+    <!--  Системы измерения  -->
+    <v:String x:Key="Celsius">°C</v:String>
+    <v:String x:Key="Fahrenheit">°F</v:String>
+
+    <v:String x:Key="Kmh">км/г</v:String>
+    <v:String x:Key="Ms">м/с</v:String>
+    <v:String x:Key="Mph">миль/г</v:String>
+    <v:String x:Key="Kn">узли</v:String>
+
+    <v:String x:Key="Mm">мм</v:String>
+    <v:String x:Key="Cm">см</v:String>
+    <v:String x:Key="Inch">дюйм</v:String>
+
+    <v:String x:Key="HPa">гПа</v:String>
+    <v:String x:Key="MmHg">мм рт. ст.</v:String>
+    <v:String x:Key="RelativeHumidity">Вологість</v:String>
+
+    <!--  Стороны света  -->
+    <v:String x:Key="West">З</v:String>
+    <v:String x:Key="East">В</v:String>
+    <v:String x:Key="North">С</v:String>
+    <v:String x:Key="South">Ю</v:String>
+
+    <!--  Фазы луны  -->
+    <v:String x:Key="New">Молодий місяць</v:String>
+    <v:String x:Key="FirstQuarter">Зростаюча</v:String>
+    <v:String x:Key="Full">Повний місяць</v:String>
+    <v:String x:Key="LastQuarter">Знижена</v:String>
+</ResourceDictionary>

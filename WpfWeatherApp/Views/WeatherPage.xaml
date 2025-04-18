@@ -1,0 +1,967 @@
+﻿<Page x:Class="MyWeatherAppp.Views.WeatherPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:b="clr-namespace:MyWeatherAppp.Mvvm"
+      xmlns:controls="clr-namespace:MyWeatherAppp.Resources.Controls"
+      xmlns:converters="clr-namespace:MyWeatherAppp.Resources.Converters"
+      xmlns:charts="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:exct="clr-namespace:MyWeatherAppp.Resources.Controls"
+      xmlns:fa="http://schemas.fontawesome.io/icons/"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      Name="page"
+      xml:lang="en-EN"
+      mc:Ignorable="d" 
+      d:DesignHeight="1000" d:DesignWidth="1100"
+      Title="WeatherPage"
+      Background="Transparent">
+    <Page.Resources>
+        <converters:WeatherCodeToIconConverter x:Key="WeatherCodeToIconConverter" />
+        <converters:WeatherLocalizationConverter x:Key="LocalizationConverter" />
+        <converters:DaysLocalizationConverter x:Key="DaysLocalizationConverter" />
+        <converters:WeekendHighlightConverter x:Key="WeekendHighlightConverter" />
+        <converters:MeasuresConverter x:Key="MeasuresConverter" />
+        <converters:WindConverter x:Key="WindConverter" />
+        <converters:WindToTextConverter x:Key="WindToTextConverter" />
+        <converters:ForecastPanelConverter x:Key="ForecastPanelConverter" />
+        <converters:MoonPhazesConverter x:Key="MoonPhazesConverter" />
+    </Page.Resources>
+
+    <!--PreviewMouseWheel="outsideScrollView_MouseWheel"-->
+    
+    <ScrollViewer
+        x:Name="outsideScrollView"
+        VerticalScrollBarVisibility="Hidden">
+
+        <StackPanel>
+
+            <Grid Margin="3,10,0,0" HorizontalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" MinWidth="550" />
+                    <ColumnDefinition Width="40" />
+                    <ColumnDefinition Width="*" MinWidth="450" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal">
+                    <Button
+                        Grid.Column="0"
+                        Width="35"
+                        Padding="7"
+                        Background="{DynamicResource WindowNavBtnBackground}"
+                        Command="{Binding RefreshDataCommand}"
+                        Style="{StaticResource WindowNavButtonStyle}">
+                        <!--<fa:ImageAwesome
+                            Foreground="{DynamicResource RefreshBtnForeground}"
+                            Icon="Refresh"
+                            Spin="{Binding IsRefreshing}"
+                            SpinDuration="2"
+                            Stretch="Fill" />-->
+                    </Button>
+                    <TextBlock
+                        Grid.Column="0"
+                        Margin="20,0,0,0"
+                        VerticalAlignment="Bottom"
+                        FontSize="30"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource PagesTipsForeground}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ErrorReceivingData}" Value="true">
+                                        <Setter Property="Text" Value="{DynamicResource RefreshDataError}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+                <StackPanel
+                    Grid.Column="2"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+                    <TextBlock
+                        VerticalAlignment="Bottom"
+                        DockPanel.Dock="Right"
+                        FontSize="30"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource PagesTipsForeground}"
+                        Text="{DynamicResource DateHeader}" />
+                    <TextBlock
+                        VerticalAlignment="Bottom"
+                        DockPanel.Dock="Right"
+                        FontSize="30"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource PagesTipsForeground}"
+                        Text="{b:CultureAwareBinding Path=Forecast.StartDate,
+                                                     StringFormat=' {0:m} - '}" />
+                    <TextBlock
+                        Margin="0,0,20,0"
+                        VerticalAlignment="Bottom"
+                        DockPanel.Dock="Right"
+                        FontSize="30"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource PagesTipsForeground}"
+                        Text="{b:CultureAwareBinding Path=Forecast.EndDate,
+                                                     StringFormat='m'}" />
+
+                </StackPanel>
+            </Grid>
+
+            <Grid
+                Margin="3,10,0,0"
+                HorizontalAlignment="Center"
+                DataContext="{Binding SelectedForecast}">
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" MinWidth="550" />
+                    <ColumnDefinition Width="40" />
+                    <ColumnDefinition Width="*" MaxWidth="460" />
+                </Grid.ColumnDefinitions>
+
+                <Border
+                    MinHeight="350"
+                    HorizontalAlignment="Stretch"
+                    Background="White"
+                    CornerRadius="10">
+                    <Border.Effect>
+                        <DropShadowEffect
+                            BlurRadius="7"
+                            Opacity="0.5"
+                            ShadowDepth="4"
+                            Color="#38434D" />
+                    </Border.Effect>
+                </Border>
+                <Border
+                    Name="dayPanel"
+                    MinHeight="350"
+                    Background="{DynamicResource BackgroundGradient}"
+                    CornerRadius="10">
+                    <Border.Resources>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{DynamicResource MainForeground}" />
+                            <Setter Property="FontSize" Value="30" />
+                        </Style>
+                    </Border.Resources>
+                    <DockPanel Margin="23,15,30,15" LastChildFill="False">
+                        <Grid
+                            Margin="-150,0,0,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            DockPanel.Dock="Right">
+                            <Control Template="{Binding Weather, Converter={StaticResource WeatherCodeToIconConverter}}">
+                                <Control.RenderTransform>
+                                    <ScaleTransform ScaleX="3" ScaleY="3" />
+                                </Control.RenderTransform>
+                            </Control>
+                        </Grid>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                            <Border>
+                                <TextBlock DockPanel.Dock="Top" Text="{Binding Date, Converter={StaticResource DaysLocalizationConverter}, StringFormat='\{0} - '}" />
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Child.Text, RelativeSource={RelativeSource Mode=Self}}" Value="">
+                                                <Setter Property="Background" Value="Gray" />
+                                                <Setter Property="MinWidth" Value="170" />
+                                                <Setter Property="CornerRadius" Value="10" />
+                                                <Setter Property="Opacity" Value="0.4" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                            </Border>
+                            <TextBlock DockPanel.Dock="Top" Text="{b:CultureAwareBinding Path=Date, StringFormat='m'}" />
+                        </StackPanel>
+                        <StackPanel
+                            Margin="0,10,0,0"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                            <!--<fa:FontAwesome
+                                Margin="0,0,0,0"
+                                VerticalAlignment="Top"
+                                FontSize="27"
+                                Foreground="{DynamicResource MapIconForeground}"
+                                Icon="MapMarker"
+                                TextAlignment="Center">
+                                -->
+                            <!--<fa:FontAwesome.Style>
+                                    <Style TargetType="fa:FontAwesome">
+                                        <Setter Property="Width" Value="{Binding ElementName=dashboard, Path=ActualWidth}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding DataContext.Forecast, ElementName=page}" Value="{x:Null}">
+                                                <Setter Property="Width" Value="0" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </fa:FontAwesome.Style>-->
+                            <!--
+
+                            </fa:FontAwesome>-->
+                            <Border>
+                                <TextBlock FontSize="32" Text="{Binding DataContext.Forecast.Location.Name, ElementName=page}" />
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Child.Text, RelativeSource={RelativeSource Mode=Self}}" Value="">
+                                                <Setter Property="Background" Value="Gray" />
+                                                <Setter Property="MinWidth" Value="200" />
+                                                <Setter Property="MaxHeight" Value="30" />
+                                                <Setter Property="CornerRadius" Value="10" />
+                                                <Setter Property="Opacity" Value="0.4" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                            </Border>
+                        </StackPanel>
+
+
+                        <StackPanel
+                            Margin="0,5,0,5"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                            <Border>
+                                <TextBlock
+                                    Margin="0,0,0,-5"
+                                    VerticalAlignment="Bottom"
+                                    FontSize="60"
+                                    Text="{Binding MaxTemperature, StringFormat='\{0}°'}" />
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Child.Text, RelativeSource={RelativeSource Mode=Self}}" Value="">
+                                                <Setter Property="Background" Value="Gray" />
+                                                <Setter Property="MinWidth" Value="70" />
+                                                <Setter Property="CornerRadius" Value="10" />
+                                                <Setter Property="Opacity" Value="0.4" />
+                                                <Setter Property="Margin" Value="0,5,0,0" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                            </Border>
+                            <StackPanel Margin="12,-15,0,0" VerticalAlignment="Bottom">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    FontSize="24"
+                                    Text="{DynamicResource NightTemperature}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding DataContext.Forecast, ElementName=page}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Hidden" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Margin="-2,-2,0,0" Text="{Binding MinTemperature, StringFormat='\{0}°'}" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <TextBlock
+                            Grid.Row="2"
+                            DockPanel.Dock="Top"
+                            FontSize="32"
+                            Text="{Binding Weather, Converter={StaticResource LocalizationConverter}}" />
+
+                        <Border Margin="0,-5,0,10" DockPanel.Dock="Top">
+                            <StackPanel Orientation="Horizontal">
+                                <Control
+                                    Margin="0,15,0,0"
+                                    VerticalAlignment="Bottom"
+                                    Template="{StaticResource wind}" />
+                                <TextBlock
+                                    Margin="15,0,0,0"
+                                    VerticalAlignment="Bottom"
+                                    FontSize="40"
+                                    Text="{Binding WindSpeed}" />
+                                <TextBlock
+                                     Margin="5,13,0,0"
+                                     VerticalAlignment="Bottom"
+                                     FontSize="32"
+                                     Text="{Binding ElementName=page, Path=DataContext.Forecast.Measures.Windspeed, Converter={StaticResource MeasuresConverter}}" />
+
+                                <StackPanel Margin="10,0,0,-1" VerticalAlignment="Bottom">
+                                    <TextBlock FontSize="24" Text="{DynamicResource WindGusts}" />
+                                    <TextBlock
+                                        Margin="0,-2,0,0"
+                                        HorizontalAlignment="Center"
+                                        Text="{Binding WindGusts}" />
+                                </StackPanel>
+                                <Path
+                                    Margin="30,30,0,0"
+                                    VerticalAlignment="Center"
+                                    Data="M 10 0 L -5 6 L -1.5 0 L -5 -6 Z"
+                                    Fill="{DynamicResource WindArrowColor}"
+                                    Stroke="{DynamicResource WindArrowColor}"
+                                    StrokeEndLineCap="Round"
+                                    StrokeLineJoin="Round"
+                                    StrokeStartLineCap="Round"
+                                    StrokeThickness="3">
+                                    <Path.RenderTransform>
+                                        <TransformGroup>
+                                            <ScaleTransform ScaleX="1" ScaleY="1" />
+                                            <RotateTransform Angle="{Binding WindDirection, Converter={StaticResource WindConverter}}" />
+                                        </TransformGroup>
+                                    </Path.RenderTransform>
+                                </Path>
+
+                                <TextBlock
+                                    Margin="10,20,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="32"
+                                    Text="{Binding Path=WindDirection, Converter={StaticResource WindToTextConverter}}" />
+                            </StackPanel>
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext, RelativeSource={RelativeSource Mode=Self}}" Value="{x:Null}">
+                                            <Setter Property="Background" Value="Gray" />
+                                            <Setter Property="Width" Value="280" />
+                                            <Setter Property="CornerRadius" Value="10" />
+                                            <Setter Property="Opacity" Value="0.4" />
+                                            <Setter Property="MaxHeight" Value="40" />
+                                            <Setter Property="HorizontalAlignment" Value="Left" />
+                                            <Setter Property="Padding" Value="0,20,0,0" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+                        <Border DockPanel.Dock="Top">
+
+                            <StackPanel Orientation="Horizontal">
+                                <!--<fa:FontAwesome
+                                    Width="{Binding ElementName=dashboard, Path=ActualWidth}"
+                                    Margin="0,0,10,0"
+                                    FontSize="30"
+                                    Foreground="{DynamicResource TintIconForeground}"
+                                    Icon="Tint"
+                                    TextAlignment="Center" />-->
+                                <TextBlock DockPanel.Dock="Top" Text="{Binding SumPrecipitation}" />
+                                <TextBlock
+                                    Margin="5,0"
+                                    VerticalAlignment="Bottom"
+                                    Text="{Binding ElementName=page, Path=DataContext.Forecast.Measures.PrecipitationSum, Converter={StaticResource MeasuresConverter}}" />
+                            </StackPanel>
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext, RelativeSource={RelativeSource Mode=Self}}" Value="{x:Null}">
+                                            <Setter Property="Background" Value="Gray" />
+                                            <Setter Property="Width" Value="230" />
+                                            <Setter Property="CornerRadius" Value="10" />
+                                            <Setter Property="Opacity" Value="0.4" />
+                                            <Setter Property="MaxHeight" Value="30" />
+                                            <Setter Property="HorizontalAlignment" Value="Left" />
+                                            <Setter Property="Padding" Value="0,30,0,0" />
+
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+
+                        <Border Margin="0,10" DockPanel.Dock="Top">
+
+                            <StackPanel Orientation="Horizontal">
+                                <!--<fa:FontAwesome
+                                    Name="dashboard"
+                                    Margin="0,0,10,0"
+                                    FontSize="30"
+                                    Foreground="{DynamicResource MapIconForeground}"
+                                    Icon="Dashboard" />-->
+                                <TextBlock DockPanel.Dock="Top" Text="{Binding Pressure, StringFormat='0'}" />
+                                <TextBlock
+                                    Margin="5,0"
+                                    VerticalAlignment="Bottom"
+                                    Text="{Binding ElementName=page, Path=DataContext.Forecast.Measures.Pressure, Converter={StaticResource MeasuresConverter}}" />
+                            </StackPanel>
+
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext, RelativeSource={RelativeSource Mode=Self}}" Value="{x:Null}">
+                                            <Setter Property="Background" Value="Gray" />
+                                            <Setter Property="Width" Value="230" />
+                                            <Setter Property="CornerRadius" Value="10" />
+                                            <Setter Property="Opacity" Value="0.4" />
+                                            <Setter Property="MaxHeight" Value="30" />
+                                            <Setter Property="HorizontalAlignment" Value="Left" />
+                                            <Setter Property="Padding" Value="0,30,0,0" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+                    </DockPanel>
+                </Border>
+                <Border
+                    Grid.Column="2"
+                    MinHeight="350"
+                    Margin="0,0,10,0"
+                    Background="White"
+                    CornerRadius="10">
+                    <Border.Effect>
+                        <DropShadowEffect
+                            BlurRadius="10"
+                            Opacity="0.5"
+                            ShadowDepth="3"
+                            Color="#38434D" />
+                    </Border.Effect>
+                </Border>
+
+                <Border
+                    Grid.Column="2"
+                    Height="350"
+                    Margin="0,0,10,0"
+                    Padding="20,15"
+                    Background="{DynamicResource BackgroundGradient}"
+                    CornerRadius="10">
+                    <Grid>
+                        <Grid>
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext, RelativeSource={RelativeSource Mode=Self}}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Hidden" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto" />
+                                <RowDefinition Height="auto" />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <TextBlock
+                                FontSize="30"
+                                Foreground="{DynamicResource MainForeground}"
+                                Text="{DynamicResource HourlyForecast}" />
+
+                            <Grid Grid.Row="1" Margin="2,6,2,4">
+                                <Grid.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontSize" Value="20" />
+                                        <Setter Property="Foreground" Value="{DynamicResource MainForeground}" />
+                                    </Style>
+                                </Grid.Resources>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="auto" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="50" />
+                                    <ColumnDefinition Width="50" />
+                                    <ColumnDefinition Width="90" />
+                                    <ColumnDefinition Width="30" />
+                                    <ColumnDefinition Width="80" />
+                                    <ColumnDefinition Width="40" />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{DynamicResource Time}" TextAlignment="Center" />
+                                <TextBlock
+                                    Name="tempBlock"
+                                    Grid.Column="3"
+                                    Margin="-10,0,0,0"
+                                    Text="{Binding ElementName=page, Path=DataContext.Forecast.Measures.Temperature, Converter={StaticResource MeasuresConverter}}"
+                                    TextAlignment="Center" />
+                                <TextBlock Grid.Column="4" Text="{DynamicResource ApparentTemperature}" />
+                                <!--<fa:FontAwesome
+                                    Grid.Column="5"
+                                    HorizontalAlignment="Center"
+                                    FontSize="20"
+                                    Foreground="{DynamicResource TintIconForeground}"
+                                    Icon="Tint"
+                                    TextAlignment="Center" />-->
+                                <!--<fa:FontAwesome
+                                    Grid.Column="6"
+                                    Margin="-5,0,0,0"
+                                    HorizontalAlignment="Center"
+                                    FontSize="20"
+                                    Foreground="{DynamicResource MapIconForeground}"
+                                    Icon="Dashboard"
+                                    TextAlignment="Center" />-->
+                                <TextBlock
+                                    Grid.Column="7"
+                                    HorizontalAlignment="Center"
+                                   Text="{DynamicResource Wind}" />
+                            </Grid>
+
+                            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Hidden">
+                                <ItemsControl
+                                    Name="hpanel"
+                                    Margin="1,0"
+                                    HorizontalContentAlignment="Stretch"
+                                    BorderThickness="0"
+                                    ItemsSource="{Binding HourlyForecasts}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Grid.Resources>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="FontSize" Value="20" />
+                                                        <Setter Property="Foreground" Value="{DynamicResource MainForeground}" />
+                                                    </Style>
+                                                </Grid.Resources>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="auto" MinWidth="45" />
+                                                    <ColumnDefinition Width="10" />
+                                                    <ColumnDefinition Width="50" />
+                                                    <ColumnDefinition Width="50" />
+                                                    <ColumnDefinition Width="100" />
+                                                    <ColumnDefinition Width="30" />
+                                                    <ColumnDefinition Width="50" />
+                                                    <ColumnDefinition Width="110" />
+                                                    <ColumnDefinition />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Time, StringFormat=t}" TextAlignment="Center" />
+
+                                                <Control
+                                                    Grid.Column="2"
+                                                    Height="50"
+                                                    Margin="0,0,-3,-20"
+                                                    HorizontalAlignment="Right"
+                                                    Template="{Binding Weather, Converter={StaticResource WeatherCodeToIconConverter}}">
+                                                    <Control.RenderTransform>
+                                                        <ScaleTransform ScaleX="0.5" ScaleY="0.5" />
+                                                    </Control.RenderTransform>
+                                                </Control>
+                                                <TextBlock
+                                                    Grid.Column="3"
+                                                    Text="{Binding Temperature, StringFormat='\{0}°'}"
+                                                    TextAlignment="Left" />
+                                                <TextBlock
+                                                    Grid.Column="4"
+                                                    Margin="-10,0,20,0"
+                                                    Text="{Binding ApparentTemperature, StringFormat='\{0}°'}"
+                                                    TextAlignment="Center" />
+                                                <TextBlock
+                                                    Grid.Column="5"
+                                                    Margin="-10,0,0,0"
+                                                    Text="{Binding RelativeHumidity, StringFormat='\{0}%'}" />
+                                                <TextBlock
+                                                    Grid.Column="6"
+                                                    Text="{Binding SurfasePressure, StringFormat='0'}"
+                                                    TextAlignment="Center" />
+                                                <StackPanel
+                                                    Grid.Column="7"
+                                                    Height="20"
+                                                    Margin="10,0"
+                                                    VerticalAlignment="Top"
+                                                    Orientation="Horizontal">
+                                                    <Path
+                                                        Margin="10,0,0,-10"
+                                                        VerticalAlignment="Center"
+                                                        Data="M 10 0 L -5 6 L -1.5 0 L -5 -6 Z"
+                                                        Fill="{DynamicResource WindArrowColor}"
+                                                        Stroke="{DynamicResource WindArrowColor}"
+                                                        StrokeEndLineCap="Round"
+                                                        StrokeLineJoin="Round"
+                                                        StrokeStartLineCap="Round"
+                                                        StrokeThickness="3">
+                                                        <Path.RenderTransform>
+                                                            <TransformGroup>
+                                                                <ScaleTransform ScaleX="0.7" ScaleY="0.7" />
+                                                                <RotateTransform Angle="{Binding WindDirection, Converter={StaticResource WindConverter}}" />
+                                                            </TransformGroup>
+                                                        </Path.RenderTransform>
+                                                    </Path>
+
+                                                    <TextBlock Margin="5,0,0,0" Text="{Binding Path=WindDirection, Converter={StaticResource WindToTextConverter}}" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Hidden" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext, RelativeSource={RelativeSource Mode=Self}}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                <!--<fa:FontAwesome
+                                    FontSize="30"
+                                    Foreground="{DynamicResource Accent}"
+                                    Icon="Bug" />-->
+                                <TextBlock
+                                    Margin="10,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="35"
+                                    Foreground="{DynamicResource MainForeground}"
+                                    Text="{DynamicResource NoData}" />
+                                <!--<fa:FontAwesome
+                                    FontSize="30"
+                                    Foreground="{DynamicResource Accent}"
+                                    Icon="Bug" />-->
+                            </StackPanel>
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                FontSize="30"
+                                Foreground="{DynamicResource MainForeground}"
+                                Text="{DynamicResource CheckConnection}" />
+                        </StackPanel>
+                    </Grid>
+                    
+                </Border>
+            </Grid>
+
+            <Grid
+                Grid.Row="2"
+                Grid.ColumnSpan="3"
+                Margin="10,30">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" />
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+                <ScrollViewer
+                    Name="selectForecastScroll"
+                    Grid.Column="1"
+                    exct:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True"
+                    CanContentScroll="True"
+                    HorizontalScrollBarVisibility="Hidden"
+                    VerticalScrollBarVisibility="Disabled">
+                    <ScrollViewer.OpacityMask>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Offset="0" Color="Transparent" />
+                            <GradientStop Offset="0.02" Color="Black" />
+                            <GradientStop Offset="0.97" Color="Black" />
+                            <GradientStop Offset="1" Color="Transparent" />
+                        </LinearGradientBrush>
+                    </ScrollViewer.OpacityMask>
+                    <ItemsControl
+                        Name="panel"
+                        Margin="0,0"
+                        HorizontalAlignment="Center"
+                        HorizontalContentAlignment="Stretch"
+                        Background="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Page}}}"
+                        BorderThickness="0"
+                        ItemsSource="{Binding Forecast.DayForecasts}"
+                        MouseWheel="ListView_MouseWheel">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <RadioButton
+                                    Name="rb"
+                                    Command="{Binding DataContext.SelectForecastCommand, ElementName=panel}"
+                                    CommandParameter="{Binding}"
+                                    GroupName="g1"
+                                    IsChecked="{Binding DataContext, ElementName=panel, Converter={StaticResource ForecastPanelConverter}, ConverterParameter={x:Reference x}, Mode=OneTime}"
+                                    MouseWheel="ListView_MouseWheel"
+                                    Style="{StaticResource ForecastPanelRadiButton}">
+
+                                    <Grid
+                                        x:Name="x"
+                                        MinWidth="130"
+                                        MinHeight="120"
+                                        Margin="10">
+                                        <Grid.Resources>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource MainForeground}" />
+                                            </Style>
+                                        </Grid.Resources>
+
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="52" />
+                                            <RowDefinition />
+                                        </Grid.RowDefinitions>
+
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition />
+                                            <ColumnDefinition Width="70" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel>
+                                            <TextBlock FontSize="20" Text="{b:CultureAwareBinding Path=Date, StringFormat='m'}" />
+                                            <TextBlock
+                                                FontSize="35"
+                                                Foreground="{Binding Date, Converter={StaticResource WeekendHighlightConverter}}"
+                                                Text="{Binding Date, Converter={StaticResource DaysLocalizationConverter}, ConverterParameter='a'}" />
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="1" Grid.ColumnSpan="2">
+                                            <StackPanel VerticalAlignment="Top" Orientation="Horizontal">
+                                                <TextBlock FontSize="50" Text="{Binding MaxTemperature}" />
+                                                <TextBlock
+                                                    Margin="5,0,5,0"
+                                                    VerticalAlignment="Bottom"
+                                                    FontSize="30"
+                                                    Opacity="0.6"
+                                                    Text="{Binding MinTemperature}" />
+                                            </StackPanel>
+
+                                            <TextBlock
+                                                Grid.Row="1"
+                                                Grid.ColumnSpan="2"
+                                                FontSize="24"
+                                                Text="{Binding Weather, Converter={StaticResource LocalizationConverter}}" />
+                                        </StackPanel>
+                                        
+                                        <Control
+                                            Grid.Column="1"
+                                            Margin="0,0,0,-20"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Top"
+                                            Template="{Binding Weather, Converter={StaticResource WeatherCodeToIconConverter}}" />
+                                    </Grid>
+                                </RadioButton>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <Button
+                    Grid.Column="0"
+                    Margin="10,0"
+                    Padding="5,7,7,7"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource WindowNavBtnBackground}"
+                    Click="ScrollToLeft_Click"
+                    Style="{StaticResource WindowNavButtonStyle}">
+                    <!--<fa:FontAwesome
+                        FontSize="30"
+                        Foreground="{DynamicResource RefreshBtnForeground}"
+                        Icon="AngleLeft" />-->
+                </Button>
+
+                <Button
+                    Grid.Column="2"
+                    Margin="10,0"
+                    Padding="7,7,5,7"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource WindowNavBtnBackground}"
+                    Click="ScrollToRight_Click"
+                    Style="{StaticResource WindowNavButtonStyle}">
+                    <!--<fa:FontAwesome
+                        FontSize="30"
+                        Foreground="{DynamicResource RefreshBtnForeground}"
+                        Icon="AngleRight" />-->
+                </Button>
+            </Grid>
+
+            <Grid Margin="3,0,0,0" HorizontalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="460" />
+                    <ColumnDefinition Width="40" />
+                    <ColumnDefinition Width="auto" MinWidth="550" />
+                </Grid.ColumnDefinitions>
+
+                <Border
+                    MinHeight="350"
+                    Margin="0,0,0,10"
+                    HorizontalAlignment="Stretch"
+                    Background="White"
+                    CornerRadius="10">
+                    <Border.Effect>
+                        <DropShadowEffect
+                            BlurRadius="7"
+                            Opacity="0.5"
+                            ShadowDepth="4"
+                            Color="#38434D" />
+                    </Border.Effect>
+                </Border>
+
+                <Border
+                    MinHeight="250"
+                    Margin="0,0,0,10"
+                    Padding="30,20"
+                    Background="{DynamicResource SpacePanelBackground}"
+                    CornerRadius="10"
+                    DataContext="{Binding SelectedForecast}">
+                    <StackPanel>
+                        <StackPanel.Resources>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource SpacePanelForeground}" />
+                                <Setter Property="FontSize" Value="32" />
+                                <Setter Property="HorizontalAlignment" Value="Center" />
+                                <Setter Property="FontWeight" Value="Bold" />
+                            </Style>
+                        </StackPanel.Resources>
+
+                        <TextBlock Text="{DynamicResource DaylightHours}" />
+                        <StackPanel
+                            Margin="-5,-3,0,0"
+                            HorizontalAlignment="Center"
+                            Orientation="Horizontal">
+                            <TextBlock Text="{Binding DayTime, StringFormat='\{0:hh}'}" />
+                            <TextBlock Text="{DynamicResource Hours}" />
+                            <TextBlock Text="{Binding DayTime, StringFormat=' {0:mm}'}" />
+                            <TextBlock Text="{DynamicResource Minutes}" />
+                        </StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Ellipse
+                                Grid.ColumnSpan="3"
+                                Width="180"
+                                Height="180"
+                                Margin="0,10,0,0"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Stroke="#FFFBBF24"
+                                StrokeDashArray="5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5   200"
+                                StrokeDashCap="Round"
+                                StrokeDashOffset="160"
+                                StrokeThickness="3" />
+                            <Control
+                                Grid.Column="2"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                RenderTransformOrigin="0.5, 0.5"
+                                Template="{StaticResource sunset}">
+                                <Control.Background>
+                                    <LinearGradientBrush SpreadMethod="Pad" StartPoint="0, 0" EndPoint="1, 1">
+                                        <LinearGradientBrush.GradientStops>
+                                            <GradientStop Offset="-5.5" Color="#FFDA88" />
+                                            <GradientStop Offset="3.9" Color="#3C4260" />
+                                        </LinearGradientBrush.GradientStops>
+                                    </LinearGradientBrush>
+                                </Control.Background>
+                            </Control>
+
+                            <TextBlock
+                                Grid.Column="2"
+                                Margin="7,40,0,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                FontSize="25"
+                                FontWeight="Normal"
+                                Text="{Binding Sunset, StringFormat=t}" />
+
+                            <Control
+                                Grid.Column="0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                RenderTransformOrigin="0.5, 0.5"
+                                Template="{StaticResource sunrise}">
+                                <Control.Background>
+                                    <LinearGradientBrush SpreadMethod="Pad" StartPoint="0, 0" EndPoint="1, 1">
+                                        <LinearGradientBrush.GradientStops>
+                                            <GradientStop Offset="-2.8" Color="#FFDA88" />
+                                            <GradientStop Offset="5.4" Color="#3C4260" />
+                                        </LinearGradientBrush.GradientStops>
+                                    </LinearGradientBrush>
+                                </Control.Background>
+                            </Control>
+
+                            <TextBlock
+                                Grid.Column="0"
+                                Margin="0,40,7,0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                FontSize="25"
+                                FontWeight="Normal"
+                                Text="{Binding Sunrise, StringFormat=t}" />
+
+                            <Control
+                                Grid.Column="1"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                RenderTransformOrigin="0.5, 0.5"
+                                Template="{StaticResource earth}">
+                                <Control.RenderTransform>
+                                    <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
+                                </Control.RenderTransform>
+                            </Control>
+                        </Grid>
+                        <TextBlock Margin="0,-30,0,0" Text="{DynamicResource MoonPhazes}" />
+                        <TextBlock Text="{Binding MoonState, Converter={StaticResource MoonPhazesConverter}}" />
+                    </StackPanel>
+                </Border>
+                <Border
+                    Grid.Column="2"
+                    MinHeight="350"
+                    Margin="0,0,10,10"
+                    Background="White"
+                    CornerRadius="10">
+                    <Border.Effect>
+                        <DropShadowEffect
+                            BlurRadius="10"
+                            Opacity="0.5"
+                            ShadowDepth="3"
+                            Color="#38434D" />
+                    </Border.Effect>
+                </Border>
+                <Border
+                    Name="graphicsPanel"
+                    Grid.Column="2"
+                    Height="350"
+                    Margin="0,0,10,10"
+                    Padding="20,15"
+                    Background="{DynamicResource BackgroundGradient}"
+                    CornerRadius="10">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Border
+                            Padding="1"
+                            HorizontalAlignment="Left"
+                            BorderBrush="Transparent"
+                            BorderThickness="1"
+                            CornerRadius="5">
+                            <StackPanel Orientation="Horizontal">
+
+                                <RadioButton
+                                    Content="{DynamicResource Temp}"
+                                    IsChecked="{Binding IsTempChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    Style="{StaticResource GraphicSelectorRbStyle}" />
+                                <RadioButton
+                                    Margin="10,0"
+                                    Content="{DynamicResource Pressure}"
+                                    IsChecked="{Binding IsPressureChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    Style="{StaticResource GraphicSelectorRbStyle}" />
+                                <RadioButton
+                                    Content="{DynamicResource Precipitation}"
+                                    IsChecked="{Binding IsRelativeHumidityChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    Style="{StaticResource GraphicSelectorRbStyle}" />
+                            </StackPanel>
+                        </Border>
+
+                        <controls:CustomToggleButton
+                            HorizontalAlignment="Right"
+                            FontSize="20"
+                            IsChecked="{Binding IsWeekTimeSelected}"
+                            LeftCase="{DynamicResource Day}"
+                            RightCase="{DynamicResource Week}" />
+
+                        <charts:CartesianChart
+                            Name="chart"
+                            Grid.Row="1"
+                            Margin="-10,0,0,-10"
+                            ScrollViewer.CanContentScroll="True"
+                            Series="{Binding Series}"
+                            XAxes="{Binding AxisX}"
+                            ZoomMode="X" />
+
+                        <!--TooltipFindingStrategy="CompareAll"-->
+                    </Grid>
+                </Border>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
